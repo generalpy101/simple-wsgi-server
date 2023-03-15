@@ -3,11 +3,11 @@ from io import StringIO
 
 class HTTPRequest:
     def __init__(self, **kwargs) -> None:
-        self.method = kwargs.get("method")
-        self.path = kwargs.get("path")
-        self.protocol = kwargs.get("protocol")
-        self.headers = kwargs.get("headers")
-        self.body = kwargs.get("body")
+        self.method: str = kwargs.get("method", "")
+        self.path: str = kwargs.get("path", "")
+        self.protocol: str = kwargs.get("protocol", "")
+        self.headers: dict[str] = kwargs.get("headers", dict())
+        self.body: str = kwargs.get("body", "")
 
     def to_environ(self) -> dict[str]:
         return {
@@ -20,6 +20,15 @@ class HTTPRequest:
             # "wsgi.url_scheme": ,
             **self._format_headers(),
         }
+
+    def to_string(self) -> str:
+        if self.method == "" or self.path == "" or self.protocol == "":
+            return "None"
+        request_string = f"{self.method} {self.path} {self.protocol}\r\n"
+        for header, value in self.headers.items():
+            request_string += f"{header}: {value}\r\n"
+        request_string += f"\r\n{self.body}"
+        return request_string
 
     def _format_headers(self):
         formatted_headers = {

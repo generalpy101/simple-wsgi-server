@@ -38,6 +38,7 @@ def service_connection(key: selectors.SelectorKey, mask: int):
             print(data.outb.decode())
             request = HTTPRequest(**parse_http(data.outb.decode()))
             print(request.to_environ())
+            print(request.to_string())
             sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
 
