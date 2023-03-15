@@ -1,16 +1,29 @@
 import socket
 import selectors
 import types
+import time
 from parsers.http_parser import parse_http
 from models.http_request import HTTPRequest
 
 HOST = "0.0.0.0"
-PORT = 5003
+PORT = 5000
 
 SERVER_CAPACITY = 1024
 BUFFER_SIZE = 1024
 
 default_selector = selectors.DefaultSelector()
+
+
+def view(environ):
+    path = environ.get("PATH_INFO")
+    time.sleep(5)
+    return f"Hello from {path}\n"
+
+
+def application(environ, start_response):
+    response = view(environ)
+    start_response("200 OK", [("Content-Length", len(response))])
+    return [response]
 
 
 def accept_wrapper(sock):
@@ -28,23 +41,32 @@ def service_connection(key: selectors.SelectorKey, mask: int):
     if mask & selectors.EVENT_READ:
         recv_data = sock.recv(1024)
         if recv_data:
-            data.outb += recv_data
+            data.inb += recv_data
         else:
             print(f"Closing connection to {data.addr}")
             default_selector.unregister(sock)
             sock.close()
     if mask & selectors.EVENT_WRITE:
-        if data.outb:
-            print(data.outb.decode())
-            request = HTTPRequest(**parse_http(data.outb.decode()))
-            print(request.to_environ())
-            print(request.to_string())
-            sent = sock.send(data.outb)
-            data.outb = data.outb[sent:]
+        if data.inb:
+            print(data.inb.decode())
+            request = HTTPRequest(**parse_http(data.inb.decode()))
+
+            def start_response(status, headers):
+                sock.sendall(f"{request.protocol} {status}\r\n".encode())
+                for key, value in headers:
+                    sock.sendall(f"{key}: {value}\r\n".encode())
+                sock.sendall("\r\n".encode())
+
+            environ = request.to_environ()
+            response = application(environ, start_response)
+            for content in response:
+                sock.sendall(content.encode("utf-8"))
+            data.inb = ""
 
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, PORT))
     sock.listen(SERVER_CAPACITY)
     print(f"Server listening on {HOST}:{PORT}")
@@ -60,8 +82,8 @@ def main():
                     service_connection(key, mask)
     except KeyboardInterrupt:
         print("Keyboard interrupt, exiting")
-    except Exception as exception:  # pylint: disable=broad-exception-caught
-        print(exception)
+    # except Exception as exception:  # pylint: disable=broad-exception-caught
+    #     print(exception)
     finally:
         print("Closing server, bye!")
         sock.close()
