@@ -9,10 +9,21 @@ class HTTP_Request:
         self.headers = kwargs.get("headers")
         self.body = kwargs.get("body")
 
-    def to_environ(self):
+    def to_environ(self) -> dict[str]:
         return {
             "REQUEST_METHOD": self.method,
             "PATH_INFO": self.path,
             "SERVER_PROTOCOL": self.protocol,
             "wsgi.input": StringIO(self.body),
+            "wsgi.version": (1, 0),
+            "wsgi.url_scheme": "http",
+            # "wsgi.url_scheme": ,
+            **self._format_headers(),
         }
+
+    def _format_headers(self):
+        formatted_headers = {
+            "HTTP_" + key.replace("-", "_"): value
+            for key, value in self.headers.items()
+        }
+        return formatted_headers

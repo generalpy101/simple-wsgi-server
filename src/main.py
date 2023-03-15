@@ -2,9 +2,10 @@ import socket
 import selectors
 import types
 from parsers.http_parser import parse_http
+from models.http_request import HTTP_Request
 
 HOST = "0.0.0.0"
-PORT = 5000
+PORT = 5003
 
 SERVER_CAPACITY = 1024
 BUFFER_SIZE = 1024
@@ -34,7 +35,9 @@ def service_connection(key: selectors.SelectorKey, mask: int):
             sock.close()
     if mask & selectors.EVENT_WRITE:
         if data.outb:
-            print(parse_http(data.outb.decode()))
+            print(data.outb.decode())
+            request = HTTP_Request(**parse_http(data.outb.decode()))
+            print(request.to_environ())
             sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
 
@@ -56,7 +59,11 @@ def main():
                     service_connection(key, mask)
     except KeyboardInterrupt:
         print("Keyboard interrupt, exiting")
+    except Exception as e:
+        print(e)
     finally:
+        print("Closing server, bye!")
+        sock.close()
         default_selector.close()
 
 
