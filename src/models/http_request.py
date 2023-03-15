@@ -1,7 +1,7 @@
 from io import StringIO
 
 
-class HTTP_Request:
+class HTTPRequest:
     def __init__(self, **kwargs) -> None:
         self.method = kwargs.get("method")
         self.path = kwargs.get("path")

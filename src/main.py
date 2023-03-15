@@ -2,7 +2,7 @@ import socket
 import selectors
 import types
 from parsers.http_parser import parse_http
-from models.http_request import HTTP_Request
+from models.http_request import HTTPRequest
 
 HOST = "0.0.0.0"
 PORT = 5003
@@ -36,7 +36,7 @@ def service_connection(key: selectors.SelectorKey, mask: int):
     if mask & selectors.EVENT_WRITE:
         if data.outb:
             print(data.outb.decode())
-            request = HTTP_Request(**parse_http(data.outb.decode()))
+            request = HTTPRequest(**parse_http(data.outb.decode()))
             print(request.to_environ())
             sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
