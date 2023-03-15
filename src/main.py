@@ -60,8 +60,7 @@ def main():
                     service_connection(key, mask)
     except KeyboardInterrupt:
         print("Keyboard interrupt, exiting")
-    # pylint: disable=broad-exception-caught
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-exception-caught
         print(exception)
     finally:
         print("Closing server, bye!")
