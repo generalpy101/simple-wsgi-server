@@ -60,8 +60,9 @@ def main():
                     service_connection(key, mask)
     except KeyboardInterrupt:
         print("Keyboard interrupt, exiting")
-    except Exception as e:
-        print(e)
+    # pylint: disable=broad-exception-caught
+    except Exception as exception:
+        print(exception)
     finally:
         print("Closing server, bye!")
         sock.close()

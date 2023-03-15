@@ -6,7 +6,7 @@ class HTTPRequest:
         self.method: str = kwargs.get("method", "")
         self.path: str = kwargs.get("path", "")
         self.protocol: str = kwargs.get("protocol", "")
-        self.headers: dict[str] = kwargs.get("headers", dict())
+        self.headers: dict[str] = kwargs.get("headers", {})
         self.body: str = kwargs.get("body", "")
 
     def to_environ(self) -> dict[str]:
