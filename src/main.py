@@ -1,7 +1,6 @@
 import socket
 import selectors
 import types
-import time
 from parsers.http_parser import parse_http
 from models.http_request import HTTPRequest
 
@@ -16,7 +15,6 @@ default_selector = selectors.DefaultSelector()
 
 def view(environ):
     path = environ.get("PATH_INFO")
-    time.sleep(5)
     return f"Hello from {path}\n"
 
 
@@ -82,8 +80,8 @@ def main():
                     service_connection(key, mask)
     except KeyboardInterrupt:
         print("Keyboard interrupt, exiting")
-    # except Exception as exception:  # pylint: disable=broad-exception-caught
-    #     print(exception)
+    except Exception as exception:  # pylint: disable=broad-exception-caught
+        print(exception)
     finally:
         print("Closing server, bye!")
         sock.close()
