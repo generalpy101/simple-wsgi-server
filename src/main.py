@@ -1,4 +1,4 @@
-from server.threaded_server import ThreadedServer
+from server import ThreadedServer
 
 HOST = "0.0.0.0"
 PORT = 5000
