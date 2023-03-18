@@ -3,12 +3,15 @@ import selectors
 import types
 from parsers.http_parser import parse_http
 from models.http_request import HTTPRequest
+from libs.logger import get_logger
 
 HOST = "0.0.0.0"
 PORT = 5000
 
 SERVER_CAPACITY = 1024
 BUFFER_SIZE = 1024
+
+logger = get_logger(__name__)
 
 default_selector = selectors.DefaultSelector()
 
@@ -41,7 +44,7 @@ def service_connection(key: selectors.SelectorKey, mask: int):
         if recv_data:
             data.inb += recv_data
         else:
-            print(f"Closing connection to {data.addr}")
+            logger.info(f"Closing connection to {data.addr}")
             default_selector.unregister(sock)
             sock.close()
     if mask & selectors.EVENT_WRITE:
@@ -67,7 +70,7 @@ def main():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, PORT))
     sock.listen(SERVER_CAPACITY)
-    print(f"Server listening on {HOST}:{PORT}")
+    logger.info(f"Server listening on {HOST}:{PORT}")
     sock.setblocking(False)
     default_selector.register(sock, selectors.EVENT_READ, data=None)
     try:
@@ -79,11 +82,11 @@ def main():
                 else:
                     service_connection(key, mask)
     except KeyboardInterrupt:
-        print("Keyboard interrupt, exiting")
+        logger.warning("Keyboard interrupt, exiting")
     except Exception as exception:  # pylint: disable=broad-exception-caught
-        print(exception)
+        logger.error(exception)
     finally:
-        print("Closing server, bye!")
+        logger.info("Closing server, bye!")
         sock.close()
         default_selector.close()
 
